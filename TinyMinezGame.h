@@ -41,6 +41,7 @@ public:
   Status    getStatus() { return( status ); }
   void      setStatus( Status newStatus ) { status = newStatus; }
   void      toggleFlag( const int8_t x, const int8_t y );
+  bool      isFlagged( const int8_t x, const int8_t y );
   uint8_t   getCursorX() { return( cursorX ); }
   uint8_t   getCursorY() { return( cursorY ); }
   uint8_t   getLevelWidth() { return( levelWidth ); }

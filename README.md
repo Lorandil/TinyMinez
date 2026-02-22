@@ -1,8 +1,8 @@
-# TinyMinez
-A MineSweeper-ish game
+## TinyMinez
+A MineSweeper-ish game for TinyJoypad and Arduboy
 
 ## The Idea
-When I ran into a mental blockade about gameplay on TinyDungeon (coming soon???), I thought that programming something more simple would be fun.
+When I ran into a mental blockade about gameplay on TinyDungeon (https://github.com/Lorandil/TinyDungeon), I thought that programming something more simple would be fun.
 From my long list of ideas, I chose a classic game idea which I encountered first on Windows 3.1: *MineSweeper*.
 
 ## The Game

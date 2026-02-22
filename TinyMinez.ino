@@ -58,7 +58,11 @@ Game game;
 Selection selection( checked, unchecked, 16, 6, 0x01 );
 
 // it's difficult to spot the cursor, so let it flash (frame time is ~50ms)
-const uint8_t CursorMaxFlashCount = 24;
+#ifdef _USE_ARDUBOY2_
+  const uint8_t CursorMaxFlashCount = 160;
+#else
+  const uint8_t CursorMaxFlashCount = 24;
+#endif
 // flash if count is greater or equal the threshold
 const uint8_t cursorFlashThreshold = CursorMaxFlashCount / 2;
 // increase this counter on every display;
@@ -97,7 +101,7 @@ void loop()
         game.setStatus( ( count++ < 128 ) ? Status::intro : Status::rules );
 
         // display intro screen
-        Tiny_Flip( false );
+        RenderImage( false );
 
         // check if button pressed
         if ( isFirePressed() )
@@ -107,6 +111,10 @@ void loop()
           // increment seed while waiting - this way we get a good enough random seed
           while ( isFirePressed() ) { game.incrementSeed(); }
         }
+
+      #ifdef _USE_ARDUBOY2_
+        _delay_ms( 50 );
+      #endif
         break;
       }
 
@@ -141,7 +149,7 @@ void loop()
             // play a sound
             blip5();
             // display new selection
-            Tiny_Flip( false );
+            RenderImage( false );
             // wait until the button is released
             waitUntilButtonsReleased( KEY_DELAY );
             // action processed
@@ -150,6 +158,10 @@ void loop()
 
           // help the RNG
           game.incrementSeed();
+
+      #ifdef _USE_ARDUBOY2_
+        _delay_ms( 50 );
+      #endif
 
         } while( !isFirePressed() );
 
@@ -221,9 +233,11 @@ void loop()
             // wait a moment
             playerAction = true;
           }
-          if ( isFirePressed() )
+          if ( isFirePressed() || isFire2Pressed() )
           {
-            uint8_t count = 0;
+            // allow Button B to directly set flag
+            uint8_t count = isFire2Pressed() ? 255 : 0;
+
             // let's check how long fire is pressed
             do
             {
@@ -240,7 +254,8 @@ void loop()
               // set or remove a flag symbol
               game.toggleFlag( cursorX, cursorY );
             }
-            else
+            // don't allow uncovering of a flagged tile
+            else if ( !game.isFlagged( cursorX, cursorY ) )
             {
               // uncover this cell and all adjacent cells (if this cell is empty)
               if ( !game.uncoverCells( cursorX, cursorY ) )
@@ -275,7 +290,7 @@ void loop()
           game.setCursorPosition( cursorX, cursorY );
 
           // draw board
-          Tiny_Flip( false );
+          RenderImage( false );
 
           // only delay if there were any changes (important for getting a good seed)
           if ( playerAction )
@@ -299,7 +314,7 @@ void loop()
         failingSound();
 
         // display ***BOOM*** screen and flash 
-        for ( uint8_t flash = 0; flash < 10; flash++ ) { Tiny_Flip( flash == 0 ); _delay_ms( 100 ); }
+        for ( uint8_t flash = 0; flash < 10; flash++ ) { RenderImage( flash == 0 ); _delay_ms( 100 ); }
 
         // uncover all mines
         game.uncoverCells( BOMB );
@@ -308,7 +323,7 @@ void loop()
         while ( !isFirePressed() )
         { 
           // show the board with all tiles uncoverted
-          Tiny_Flip( true );
+          RenderImage( true );
           // update cursor flash count
           cursorFlashCount++;
           if ( cursorFlashCount >= CursorMaxFlashCount ) { cursorFlashCount = 0; }
@@ -332,7 +347,7 @@ void loop()
       case Status::gameWon:
       {
         // display game won screen
-        Tiny_Flip( false );
+        RenderImage( false );
         // play a tune
         successSound();
         // wait for button
@@ -351,7 +366,7 @@ void loop()
 }
 
 /*--------------------------------------------------------*/
-void Tiny_Flip( bool invert )
+void RenderImage( bool invert )
 {
   Status gameStatus = game.getStatus();
 
@@ -373,7 +388,7 @@ void Tiny_Flip( bool invert )
   // there are 8 rows of 8 pixels each
   for ( uint8_t y = 0; y < 8; y++)
   {
-    TinyFlip_PrepareDisplayRow( y );
+    PrepareDisplayRow( y );
 
     switch ( gameStatus )
     {
@@ -431,7 +446,7 @@ void Tiny_Flip( bool invert )
           // invert anyway?
           pixels ^= invertValue;
 
-          TinyFlip_SendPixels( pixels );
+          SendPixels( pixels );
         } // for x
 
         // display the dashboard here
@@ -439,7 +454,7 @@ void Tiny_Flip( bool invert )
         {
           uint8_t pixels = pgm_read_byte( dashBoard + x + y * 32 )
                          | displayText( x, y );
-          TinyFlip_SendPixels( pixels );
+          SendPixels( pixels );
         }
         break;
       }
@@ -449,24 +464,24 @@ void Tiny_Flip( bool invert )
       default:
       {
       #if !defined(__AVR_ATtiny85__)
-        Serial.println( F("*** Tiny_Flip() : default branch hit - did you forget something? ***") );
+        Serial.println( F("*** RenderImage() : default branch hit - did you forget something? ***") );
         while( 1 );
         break;
       #endif
       }
     } // switch
     
-    TinyFlip_FinishDisplayRow();
+    FinishDisplayRow();
   } // for y
 
   // display the whole screen at once
-  TinyFlip_DisplayBuffer();
+  DisplayBuffer();
 
   #ifdef _ENABLE_SERIAL_SCREENSHOT_
     if ( _SERIAL_SCREENSHOT_TRIGGER_CONDITION_ )
     {
       // print a screenshot to the serial interface
-      TinyFlip_SerialScreenshot();
+      SerialScreenshot();
     }
   #endif
 }
@@ -502,7 +517,7 @@ uint8_t* displayBitmapRow( const uint8_t y, const uint8_t *bitmap, const bool in
       pixels |= selection.getOverlayPixels( x, y );
     }
     
-    TinyFlip_SendPixels( pixels );
+    SendPixels( pixels );
   } // for x
 
   // return the current decompression pointer
