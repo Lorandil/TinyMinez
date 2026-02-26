@@ -41,7 +41,7 @@
 #include "tinyJoypadUtils.h"
 #include "textUtils.h"
 #include "soundFX.h"
-#include "RLEdecompression.h"
+#include "uCompression.h"
 #include "TinyMinezGame.h"
 #include "Selection.h"
 
@@ -505,7 +505,7 @@ uint8_t* displayBitmapRow( const uint8_t y, const uint8_t *bitmap, const bool in
   uint8_t *chunkBuffer = getTextBuffer();
 
   // uncompress chunk and save next address
-  uint8_t *render = pgm_RLEdecompress( bitmap, chunkBuffer, 128 );
+  uint8_t *render = uCompression::pgm_RLEdecompress256( bitmap, chunkBuffer, 128 );
 
   // display the full line
   for ( uint8_t x = 0; x < 128; x++ )
