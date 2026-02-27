@@ -160,7 +160,7 @@ void loop()
           game.incrementSeed();
 
       #ifdef _USE_ARDUBOY2_
-        _delay_ms( 50 );
+        _delay_ms( 150 );
       #endif
 
         } while( !isFirePressed() );
@@ -280,6 +280,9 @@ void loop()
           {
             // play a sound
             blip2();
+          #ifdef _USE_ARDUBOY2_            
+            _delay_ms( 150 );
+          #endif
           }
 
           // update cursor flash count
@@ -410,7 +413,11 @@ void RenderImage( bool invert )
             case Status::prepareGame:
              compressedBitmap = TitleScreen; break;
             case Status::rules:
+            #ifdef _USE_ARDUBOY2_
+              compressedBitmap = ArduboyRulez; break;
+            #else
               compressedBitmap = Rules; break;
+            #endif
             case Status::difficultySelection:
              compressedBitmap = difficultySelection; break;
             case Status::boom:
